@@ -140,7 +140,7 @@ def main():
     parser.add_argument('-d', '--postdata', metavar='\'POST data\'', type=json.loads, help='Set the POST data (between single quotes) otherwise will be a GET (example: \'{ "q":"query string", "foo":"bar" }\').')
     parser.add_argument('-x', '--proxy', help='Set the proxy server (example: 192.168.1.1:8080).')
     parser.add_argument('-a', '--all', action='store_true', help='Print details for all response headers. Good for check the related RFC.')
-    parser.add_argument('-s', '--ssl', action="store_true" , help='Enable or disable ssl validation.')
+    parser.add_argument('-s', '--ssl', action="store_true" , help='Enable or disable ssl verification.')
     args = parser.parse_args()
     if args.database == True:
         print_database(False, args.dbfile)
