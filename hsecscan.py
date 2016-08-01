@@ -7,6 +7,7 @@ from urlparse import urlparse
 import urllib2
 import urllib
 import json
+import ssl
 
 class SmartRedirectHandler(urllib2.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -80,7 +81,8 @@ def missing_headers(headers, dbfile):
     cur.close()
     conn.close()
 
-def scan(url, redirect, useragent, postdata, proxy, dbfile):
+def scan(url, redirect, useragent, postdata, proxy, dbfile, validatessl):
+
     request = urllib2.Request(url.geturl())
     request.add_header('User-Agent', useragent)
     request.add_header('Origin', 'http://hsecscan.com')
@@ -97,7 +99,14 @@ def scan(url, redirect, useragent, postdata, proxy, dbfile):
         if redirect:
             opener = urllib2.build_opener(SmartRedirectHandler())
             urllib2.install_opener(opener)
-    response = urllib2.urlopen(request)
+    if validatessl:
+        response = urllib2.urlopen(request)
+    else:
+	ctx = ssl.create_default_context()
+    	ctx.check_hostname = False
+    	ctx.verify_mode = ssl.CERT_NONE
+        response = urllib2.urlopen(request, context=ctx)
+
     print '>> RESPONSE INFO <<'
     print_response(response.geturl(), response.getcode(), response.info())
     print '>> RESPONSE HEADERS DETAILS <<'
@@ -131,6 +140,7 @@ def main():
     parser.add_argument('-d', '--postdata', metavar='\'POST data\'', type=json.loads, help='Set the POST data (between single quotes) otherwise will be a GET (example: \'{ "q":"query string", "foo":"bar" }\').')
     parser.add_argument('-x', '--proxy', help='Set the proxy server (example: 192.168.1.1:8080).')
     parser.add_argument('-a', '--all', action='store_true', help='Print details for all response headers. Good for check the related RFC.')
+    parser.add_argument('-s', '--ssl', action="store_true" , help='Enable or disable ssl validation.')
     args = parser.parse_args()
     if args.database == True:
         print_database(False, args.dbfile)
@@ -139,7 +149,7 @@ def main():
     elif args.URL:
         global allheaders
         allheaders = args.all
-        scan(args.URL, args.redirect, args.useragent, args.postdata, args.proxy, args.dbfile)
+        scan(args.URL, args.redirect, args.useragent, args.postdata, args.proxy, args.dbfile, args.ssl)
     else:
         parser.print_help()
 
